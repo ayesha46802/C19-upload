@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!-- saved from url=(0012)about:srcdoc -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/addons/p5.sound.min.js" crossorigin=""></script>
+    
+    
+
+  <!--<base href="https://editor.p5js.org/cat46802/sketches/Qd8_hL9Wd/">--><base href="."><style>
+html, body {
+  margin: 0;
+  padding: 0;
+}
+canvas {
+  display: block;
+}
+</style><script src="https://editor.p5js.org/previewScripts.js"></script><style data-emotion=""></style><script>
+    function getScriptOff(line) {
+      var offs = [[70,"sketch"]];
+      var l = 0;
+      var file = '';
+      for (var i=0; i<offs.length; i++) {
+        var n = offs[i][0];
+        if (n < line && n > l) {
+          l = n;
+          file = offs[i][1];
+        }
+      }
+      return [line - l, file];
+    }
+    // catch reference errors, via http://stackoverflow.com/a/12747364/2994108
+    window.onerror = function (msg, url, lineNumber, columnNo, error) {
+        var string = msg.toLowerCase();
+        var substring = "script error";
+        var data = {};
+        if (url.match(/^(http:\/\/|https:\/\/)/) !== null && error.stack){
+          var errorNum = error.stack.split('about:srcdoc:')[1].split(':')[0];
+          var fileInfo = getScriptOff(errorNum);
+          data = msg + ' (' + fileInfo[1] + ': line ' + fileInfo[0] + ')';
+        } else {
+          var fileInfo = getScriptOff(lineNumber);
+          data = msg + ' (' + fileInfo[1] + ': line ' + fileInfo[0] + ')';
+        }
+        window.parent.postMessage([{
+          log: [{
+            method: 'error',
+            data: [data],
+            id: Date.now().toString()
+          }],
+          source: fileInfo[1]
+        }], '*');
+      return false;
+    };
+    // catch rejected promises
+    window.onunhandledrejection = function (event) {
+      if (event.reason && event.reason.message && event.reason.stack){
+        var errorNum = event.reason.stack.split('about:srcdoc:')[1].split(':')[0];
+        var fileInfo = getScriptOff(errorNum);
+        var data = event.reason.message + ' (' + fileInfo[1] + ': line ' + fileInfo[0] + ')';
+        window.parent.postMessage([{
+          log: [{
+            method: 'error',
+            data: [data],
+            id: Date.now().toString()
+          }],
+          source: fileInfo[1]
+        }], '*');
+      }
+    };
+  </script></head>
+  <body>
+    <script data-tag="@fs-sketch.js">var monkey , monkey_running;
+var banana , bananaImage , foodGroup;
+var stone , stoneImage , obstacleGroup;
+var ground , groundImage , invisibleGround ;
+var rand , score;
+
+function preload(){
+  
+  monkey_running = loadAnimation("Monkey_01.png","Monkey_02.png",
+"Monkey_03.png","Monkey_04.png","Monkey_05.png","Monkey_06.png",
+"Monkey_07.png","Monkey_08.png", "Monkey_09.png","Monkey_10.png")
+
+bananaImage = loadImage("Banana.png");
+stoneImage = loadImage("stone.png");
+backgroundImage = loadImage("jungle.png");
+
+}
+
+function setup() {
+  createCanvas(400, 400);
+  
+  monkey = createSprite(100,340,20,50);
+  monkey.addAnimation(monkey,"monkey_running");
+  monkey.scale = 0.1;
+  monkey.x = 50;
+  monkey.depth = monkey.depth + 1;
+  
+  banana = createSprite(200,285,10,10);
+  banana.y = randomNumber(120,200);
+  banana.setAnimation("Banana");
+  banana.scale = 0.05;
+  banana.velocityX = -3;
+  banana.lifetime = 100;
+  
+  //depth
+  banana.depth = monkey.depth;
+  monkey.depth = monkey.depth + 1;
+  rand = randomNumber(1,100);
+  console.log(rand);
+  
+var stone = createSprite(220,300,10,10);
+stone.setAnimation("Stone");
+stone.scale = 0.15;
+stone.velocityX = -4;
+    
+  //assign the lifetime
+stone.lifetime = 100;
+    
+//adjust the depth
+stone.depth = monkey.depth;
+  
+ground = createSprite(65,320,400,400);
+ground.addAnimation(ground,"groundImage");
+ground.x = ground.width/2;
+ground.velocityX = -4;
+  
+invisibleGround = createSprite(80,340,10,10);
+invisibleGround.visble = false;
+  
+score = 0;
+  
+  
+  foodGroup = new Group();
+  obstacleGroup = new Group();
+}
+
+function draw() {
+  background(220);
+  
+   score = score + Math.round(getFrameRate()/60);
+  text("Score: "+ score, 500,50);
+  
+  if (ground.x < 0){
+    ground.x = ground.width/2;
+  }
+  
+  //jump when space is pressed
+  if(keyDown("space")){
+    monkey.velocityY = -10;
+  }
+  
+  //add gravity
+  monkey.velocityY = monkey.velocityY + 0.8;
+ 
+ //collide monkey from ground to stop from going out of screen 
+  monkey.collide(ground);
+  
+  // spawn food
+  spawnFood();
+  
+  //spawn obstacles
+  spawnObstacles();
+  
+  var survivalTime = 0;
+  stroke("white");
+  textSize(20);
+  fill("white");
+  survivalTime = Math.ceil(frameCount/frameRate());
+  text( " Survival Time: " + survivalTime , 100,50);
+  
+  if(foodGroup.isTouching(monkey)){
+  score = score + 2 ;
+  banana.destroy(banana);
+     }
+
+  
+  if(obstacleGroup.isTouching(monkey)){
+    monkey.scale = 0.2;
+    
+  }
+  drawSprites();
+  
+}
+
+function spawnFood(){
+  
+  if(World.frameCount % 80 === 0){
+  var banana = createSprite(200,285,10,10);
+  banana.y = randomNumber(120,200);
+  banana.setAnimation("Banana");
+  banana.scale = 0.05;
+  banana.velocityX = -3;
+  banana.lifetime = 100;
+  
+  //depth
+  banana.depth = monkey.depth;
+  monkey.depth = monkey.depth + 1;
+  
+  var bananaGroup = createGroup();
+  bananaGroup.add(banana);
+  }
+}
+
+function spawnObstacles (){
+  if (World.frameCount % 300 === 0){
+    var stone = createSprite(220,300,10,10);
+    stone.setAnimation("Stone");
+    stone.scale = 0.15;
+    stone.velocityX = -4;
+    
+    //assign the lifetime
+    stone.lifetime = 100;
+    
+    //adjust the depth
+    stone.depth = monkey.depth;
+    monkey.depth = monkey.depth + 1;
+    
+    switch(score){
+        
+        case 10: monkey.scale = 0.12; 
+        break;
+        
+        case 20: monkey.scale = 0.14;
+        break;
+        
+        case 30 :monkey.scale = 0.16;
+        break;
+        
+        case 40 :monkey.scale = 0.20;
+        break;
+      default:break;
+    }
+    var obstacleGroup = createGroup();
+    obstacleGroup.add(stone);
+  }
+}</script>
+  
+
+<main><canvas id="defaultCanvas0" class="p5Canvas" data-hidden="true" width="800" height="800" style="visibility: hidden; width: 400px; height: 400px;"></canvas></main></body></html>
